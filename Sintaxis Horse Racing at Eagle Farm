@@ -1,0 +1,335 @@
+#Horse Racing at Eagle Farm
+
+#Keywords: multiple regression
+
+#Description
+
+#Results of horse races at Eagle Farm, Brisbane, on 31 August 1998. The data, collected by Donald Forbes for his MS305 Data Analysis Project, give results for each horse in a sequence of 8 races.
+
+#Variable		Description
+#Position		Finishing position
+#Starters		Number of horses in race
+#Last		Finishing position in last race
+#Since		Days since last race
+#Number		Identifying number of horse in race
+#Carried		Weight carried
+#Weight		Handicap weight
+#Barrier		Barrier position at start of race
+#Distance		Length of race
+#Lengths		Number of lengths that horse finished from winner
+#Odds		Starting odds
+#Starts		Number of races previously started in
+#Age		Age of horse in years
+#Ratio		Proportion of wins in previous starts
+#---------------------------------------------------------------------------------------------
+#Descripción
+#Los resultados de carreras de caballos
+#en granja del águila, Brisbane, el 31 de agosto de 1998.
+#los datos, recogidos por Donald Forbes por su Proyecto
+#de Análisis de Datos MS305, dan resultados para cada caballo
+#en una secuencia de 8 carreras.
+#¿Exite una relacion lineal entre las variable independientes y la variable dependiente?
+#Definimos como variable dependiente Position, es decir,
+#la posicion final 
+
+# CARGAR DATOS Caballos
+
+Caballos <- read.delim("http://www.statsci.org/data/oz/horses.txt")
+
+# Mostrar datos
+head(Caballos)
+
+# Resumen Numerico
+summary(Caballos)
+
+#Graficos generales
+plot(Caballos)#Poco muestra
+
+#Mostrar variables 
+ls(Caballos)
+
+#Procedemos a separar variables
+attach(Caballos)
+
+#Definimos variables categoricas 
+#Variables: Number que es la identificacion del caballo
+
+#Variable(s) categorica(s)
+f.Number<-factor(Number)
+
+#Matriz de correlaciones
+cor(Caballos)
+
+#Correlaciones de cada variable respecto a Position
+cor.test(Position,Last)
+cor.test(Position,Starters)
+cor.test(Position,Since)
+cor.test(Position,Number)
+cor.test(Position,Carried)
+cor.test(Position,Weight)
+cor.test(Position,Barrier)
+cor.test(Position,Distance)
+cor.test(Position,Lengths)
+cor.test(Position,Odds)
+cor.test(Position,Starts)
+cor.test(Position,Age)
+cor.test(Position,Ratio)
+
+
+#Test de Correlaciones para cada variable, 
+#se busca eliminar variables no correlacionadas respecto 
+#a la variable independiente Crime,sin embargo una correlacion baja
+#no implica que no exita alguna correlación sino que no es una correlacion 
+#lineal. 
+#-----------------------------------------------
+#Ho: s = 0 Ha:  s =/ 0
+#
+#RD: p.Valor << alfa Entonces Rechazamos Ho
+#
+#alfa= 0.05
+#
+#-----------------------------------------------
+
+
+#Resultados analisis de correlaciones
+#
+#Variable      Cor             p-Valor         s( Sí o No) 
+#Last         0.2923892     0.002863               Sí
+#Starters     0.3704168     0.000127               Sí
+#Since        0.1010321     0.3123                 No
+#Number       0.4409523     3.509e-06              Sí
+#Carried     -0.2092088     0.03483                Sí
+#Weight      -0.2017450     0.04201                sí
+#Barrier      0.1018310     0.3085                 No  
+#Distance    -0.1392378     0.1628                 No
+#Lengths      0.8925284     2.2e-16                Sí
+#Odds         0.3707911     0.0001249              Sí
+#Starts       0.1811226     0.06848                No
+#Age          0.2186283     0.02727                Sí
+#Ratio       -0.1874573     0.05921                No
+
+#________________________________________________________
+
+#Ir a Paquetes/Seleccionar espejo CRAN/Colombia
+#Instalar paquetes 
+install.packages('lmtest');install.packages('faraway')
+
+#________________________________________________________
+
+
+# Agrupamiento de Datos:
+grupo1<-data.frame(Position,Last,Starters,Since,Number,Carried,Weight,Barrier,Distance,Lengths,Odds,Starts,Age,Ratio)
+grupo2<-data.frame(Position,Last,Starters,Carried,Weight,Lengths,Odds,Age)
+grupo3<-data.frame(Position,Since,Barrier,Distance,Starts,Ratio)
+#Sin variables: Ratio,Number,Distance,Barrier,Weight,Last
+grupo4<-data.frame(Position,Starters,Since,Carried,Lengths,Odds,Starts,Age)
+#Agregamos variable categorica
+grupo5<-data.frame(Position,Starters,Since,Carried,Lengths,Odds,Starts,Age,f.Number)
+
+# Planteamiento de modelos:
+modelo1<-lm(Position~.,data=grupo1);summary(modelo1)#Todas las variables
+modelo2<-lm(Position~.,data=grupo2);summary(modelo2)#varaibles correlacionadas linealmente
+modelo3<-lm(Position~.,data=grupo3);summary(modelo3)#Variable no correlacionadas linealmente
+modelo4<-lm(Position~.,data=grupo4);summary(modelo4)#Variables seleccionadas por inspección
+modelo5<-lm(Position~.,data=grupo5);summary(modelo5)#Agregamos variable categorica a modelo 4
+
+# Análisis Gráfico de cada modelo:
+par(mfrow=c(2,2))
+plot(modelo1)
+par(mfrow=c(1,1))
+par(mfrow=c(2,2))
+plot(modelo2)
+par(mfrow=c(1,1))
+par(mfrow=c(2,2))
+plot(modelo3)
+par(mfrow=c(1,1))
+par(mfrow=c(2,2))
+plot(modelo4)
+par(mfrow=c(1,1))
+par(mfrow=c(2,2))
+plot(modelo5)
+par(mfrow=c(1,1))
+
+# Selección de Modelos:
+BIC(modelo1,modelo2,modelo3,modelo4,modelo5) # Se selecciona aquel con el valor BIC más bajo
+AIC(modelo1,modelo2,modelo3,modelo4,modelo5) # Se selecciona aquel con el valor AIC más bajo
+
+#NOS HEMOS QUEDADO CON EL MODELO 4 CON EL MÁS BAJO VALOR AIC & BIC
+
+# Diagnóstico del modelo:
+# Librerías a usar, es necesario instalarlas previamente:
+library(lmtest)
+library(faraway)
+
+# Pruebas de Especificación:
+#-----------------------------------
+#¿Está bien el modelo? 
+#Test de Ramsey Reset
+#
+ #es convenientes No rechazar la hipotesis Nula
+#
+#Ho: Bien especificado = 0 Ha: Mal especificado
+#
+#RD: p.Valor << a Entonces Rechazamos Ho
+#
+#a= 0.05
+#------------------------------------
+
+resettest(modelo1);resettest(modelo2);resettest(modelo3);resettest(modelo4);resettest(modelo5)
+
+#---------------------------------------------------------
+#Resultados Test Ramsey
+
+#        RESET test
+
+#data:  modelo1
+#RESET = 0.55624, df1 = 2, df2 = 68, p-value = 0.5759
+
+#    RESET test
+
+#data:  modelo2
+#RESET = 2.7886, df1 = 2, df2 = 92, p-value = 0.06672
+
+
+#        RESET test
+
+#data:  modelo3
+#RESET = 0.76386, df1 = 2, df2 = 94, p-value = 0.4687
+
+
+#        RESET test
+
+#data:  modelo4
+#RESET = 1.4417, df1 = 2, df2 = 92, p-value = 0.2418
+
+
+#        RESET test
+
+#data:  modelo5
+#RESET = 0.57241, df1 = 2, df2 = 73, p-value = 0.5667
+#----------------------------------------------------------
+# Los modelos están bien especificados.
+#---------------------------------------------------------
+
+# Diagnóstico de multicolinealidad:
+vif(modelo4)
+1/(1-summary(modelo4)$r.squared)
+# se compara cada vif de las variables con el vif de cada modelo, si es
+# mayor el vif de la variable significa que esa variable genera multicolinealidad
+------------------------------------------------------------
+#Ninguna variable genera multicolinealidad
+-----------------------------------------------------------
+# Diagnóstico gráfico modelo 4:
+par(mfrow=c(2,2))
+plot(modelo4)
+par(mfrow=c(1,1))
+# No se observan incumplimiento de los supuestos
+
+
+#Comprobación de Supuestos
+
+# Linealidad:
+par(mfrow=c(2,3))
+prplot(modelo4,1)
+prplot(modelo4,2)
+prplot(modelo4,3)
+prplot(modelo4,4)
+prplot(modelo4,5)
+prplot(modelo4,6)
+par(mfrow=c(1,1))
+# Se observa linealidad en todos los casos.
+
+# Normalidad:
+r<-residuals(modelo4)
+par(mfrow=c(1,2))
+qqnorm(modelo4$resid)
+qqline(modelo4$resid)
+hist(r,freq = F,nclass=10)
+xfit<-seq(min(r),max(r))
+yfit<-dnorm(xfit,mean=mean(r),sd=sd(r))
+lines(xfit, yfit, col="blue", lwd=2) 
+par(mfrow=c(1,1))
+
+#-----------------------------------
+#¿Existe normalidad? 
+#Test de Shapiro-Wilks
+#
+ #es convenientes No rechazar la hipotesis Nula
+#
+#Ho: Hay Normalidad = 0 Ha: No hay Normalidad
+#
+#RD: p.Valor << a Entonces Rechazamos Ho
+#
+#a= 0.05
+#------------------------------------
+shapiro.test(r)
+
+#     Shapiro-Wilk normality test
+#     data:  r
+#     W = 0.99154, p-value = 0.7762
+#------------------------------------
+#Hay Normalidad
+#-------------------------------------
+# Homocedasticidad:
+rs<-rstandard(modelo4)
+opar<-par(mfrow=c(1,2))
+# los residuos solos
+plot(rs,ylab='Residuos estudentizados')
+title(sub="(a)")
+# los residuos versus los valores ajustados
+plot(fitted(modelo4),rs,xlab='Valores ajustados',
+ylab='Residuos estudentizados')
+title(sub="(b)")
+par(opar)
+#-----------------------------------
+#¿Existe Homocedasticidad? 
+#Test de Barlet
+#
+ #es convenientes No rechazar la hipotesis Nula
+#
+#Ho: Varianza constante, Hay homocedasticidad = 0 Ha: Varianza no constante,No hay Homocedasticidad
+#
+#RD: p.Valor << a Entonces Rechazamos Ho
+#
+#a= 0.05
+#------------------------------------
+bptest(modelo4)
+
+# studentized Breusch-Pagan test
+
+# data:  modelo4
+# BP = 5.0505, df = 7, p-value = 0.6538
+#-------------------------------------
+Hay Homocedasticidad
+#-------------------------------------
+# Incorrelación:
+opar<-par(mfrow=c(1,2))
+# El grafico siguiente nos da el grafico lag
+n<-length(rs)
+plot(rs[2:n],rs[1:(n-1)],xlab=expression(r[i-1]),ylab=expression(r[i]))
+# y este permite identificar autocorrelacion
+plot(rs,type="l",ylab="residuals")
+par(opar)
+#-----------------------------------
+#¿Existe Incorrelacion? 
+#Test de Durbin Watson
+#
+ #es convenientes No rechazar la hipotesis Nula
+#
+#Ho: No Existe incorrelacion = 0 Ha: Hay incorrelacion
+#
+#RD: p.Valor << a Entonces Rechazamos Ho
+#
+#a= 0.05
+#------------------------------------
+dwtest(modelo4) 
+
+# Durbin-Watson test
+
+# data:  modelo4
+# DW = 0.83259, p-value = 2.751e-10
+# alternative hypothesis: true autocorrelation is greater than 0
+
+#Se rechaza la hipotesis nula, existe autocorrelacion. 
+#--------------------------------------
+
